@@ -1,0 +1,80 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.0.3'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.asciidoctor.jvm.convert' version '4.0.5'
+}
+
+group = 'com.poc.reflection.springboot'
+version = '0.0.1-SNAPSHOT'
+description = 'springboot-reflection-poc'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    set('snippetsDir', file("build/generated-snippets"))
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-micrometer-tracing-brave'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
+    implementation 'org.springframework.boot:spring-boot-starter-restclient'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-zipkin'
+    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+    compileOnly 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-micrometer-tracing-test'
+    testImplementation 'org.springframework.boot:spring-boot-restdocs'
+    testImplementation 'org.springframework.boot:spring-boot-starter-opentelemetry-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-restclient-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-thymeleaf-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-zipkin-test'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+    testImplementation 'org.testcontainers:testcontainers-grafana'
+    testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// Compile main sources WITHOUT -parameters so /demo/fail endpoints demonstrate the reflection issue.
+// See README.md. To fix the fail endpoints project-wide, uncomment the block below instead.
+tasks.named('compileJava') {
+    options.compilerArgs.removeAll { it == "-parameters" }
+}
+
+// Uncomment to compile with -parameters so Spring can discover param names via reflection.
+// With this enabled, /demo/fail and /demo/fail/{id} will work; without it they fail at runtime.
+// tasks.withType(JavaCompile).configureEach {
+//     options.compilerArgs.add("-parameters")
+// }
+
+tasks.named('test') {
+    outputs.dir snippetsDir
+    useJUnitPlatform()
+}
+
+tasks.named('asciidoctor') {
+    inputs.dir snippetsDir
+    dependsOn test
+}
