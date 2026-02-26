@@ -17,12 +17,14 @@ Demonstrates the **fix** by enabling `-parameters` in the build configuration. E
 
 ## All Endpoints
 
-| Endpoint | Method | Parameters | Description |
-|----------|--------|------------|-------------|
-| `/demo/fail` | GET | `query` (required), `filter` (optional) | Relies on reflection for param names; fails without `-parameters`. |
-| `/demo/success` | GET | `query` (required), `filter` (optional) | Uses explicit `@RequestParam(name = "...")`; works on both branches. |
-| `/demo/fail/{id}` | GET | path: `id` | Relies on reflection for path variable name; fails without `-parameters`. |
-| `/demo/success/{id}` | GET | path: `id` | Uses explicit `@PathVariable(name = "id")`; works on both branches. |
+On the **error** branch, `/demo/fail` and `/demo/fail/{id}` fail with **500 Internal Server Error**. On the **success** branch, all four endpoints return 200 with the expected body.
+
+| Endpoint | Method | Parameters | Error branch outcome | Success branch outcome |
+|----------|--------|------------|----------------------|------------------------|
+| `/demo/fail` | GET | `query` (required), `filter` (optional) | **500 Internal Server Error** | **200 OK** — body: `query=<value>, filter=<value>`. |
+| `/demo/success` | GET | `query` (required), `filter` (optional) | **200 OK** — body: `query=<value>, filter=<value>`. | **200 OK** — body: `query=<value>, filter=<value>`. |
+| `/demo/fail/{id}` | GET | path: `id` | **500 Internal Server Error** | **200 OK** — body: `id=<value>`. |
+| `/demo/success/{id}` | GET | path: `id` | **200 OK** — body: `id=<value>`. | **200 OK** — body: `id=<value>`. |
 
 ## Testing All Endpoints and Expected Outcomes
 
@@ -30,13 +32,15 @@ When you test, use the tables below. Base URLs: **Error branch** `http://localho
 
 ### On `feature-reflection-param-error` (Error scenario)
 
+On this branch, `/demo/fail` and `/demo/fail/{id}` fail with **500 Internal Server Error**.
+
 | Endpoint | Example request | Expected outcome |
 |----------|-----------------|------------------|
-| `/demo/fail` | `GET /demo/fail?query=hello` | **Fails** — 400 Bad Request or 500 (parameter name discovery fails; `query` not bound). |
-| `/demo/fail` | `GET /demo/fail?query=hello&filter=world` | **Fails** — same as above. |
+| `/demo/fail` | `GET /demo/fail?query=hello` | **500 Internal Server Error** — `IllegalArgumentException: Name for argument of type [java.lang.String] not specified...` |
+| `/demo/fail` | `GET /demo/fail?query=hello&filter=world` | **500 Internal Server Error** — same as above. |
 | `/demo/success` | `GET /demo/success?query=hello` | **200 OK** — body: `query=hello, filter=null`. |
 | `/demo/success` | `GET /demo/success?query=hello&filter=world` | **200 OK** — body: `query=hello, filter=world`. |
-| `/demo/fail/123` | `GET /demo/fail/123` | **Fails** — 400/500 (path variable name discovery fails). |
+| `/demo/fail/123` | `GET /demo/fail/123` | **500 Internal Server Error** — `IllegalArgumentException: Name for argument of type [java.lang.String] not specified...` |
 | `/demo/success/123` | `GET /demo/success/123` | **200 OK** — body: `id=123`. |
 
 ### On `feature-reflection-param-success` (Success scenario)
@@ -59,7 +63,7 @@ Run both scenarios side-by-side using the deployment script:
 ./deploy-demo.sh
 ```
 
-- **Error App**: `http://localhost:8081` — test all endpoints above; `/demo/fail` and `/demo/fail/{id}` fail; `/demo/success` and `/demo/success/{id}` succeed.
+- **Error App**: `http://localhost:8081` — test all endpoints above; `/demo/fail` and `/demo/fail/{id}` fail with **500 Internal Server Error**; `/demo/success` and `/demo/success/{id}` succeed with 200.
 - **Success App**: `http://localhost:8082` — all four endpoints return 200 with the expected response bodies.
 
 ### Manual Verification

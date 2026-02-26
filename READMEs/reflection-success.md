@@ -6,6 +6,8 @@ By enabling the `-parameters` compiler flag in `build.gradle`, Spring can discov
 
 ## All Endpoints on This Branch
 
+On the **success** branch only, all four endpoints return 200 OK. On the error branch, `/demo/fail` and `/demo/fail/{id}` fail with **500 Internal Server Error**. Here, with `-parameters` enabled, those paths succeed and return 200.
+
 | Endpoint | Method | Parameters | Expected outcome on this branch |
 |----------|--------|------------|---------------------------------|
 | `/demo/fail` | GET | `query` (required), `filter` (optional) | **200 OK** — body: `query=<value>, filter=<value>`. |
