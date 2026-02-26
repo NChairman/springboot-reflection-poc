@@ -5,9 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.web.servlet.MockMvc;
 
-import jakarta.servlet.ServletException;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -33,21 +30,21 @@ class ReflectionDemoControllerTest {
     }
 
     /**
-     * When the class is compiled without -parameters, Spring cannot discover
+     * When the class is compiled WITH -parameters, Spring discovers
      * parameter names for @RequestParam/@PathVariable without explicit names,
-     * so invoking the fail endpoint throws (e.g. ServletException wrapping IllegalArgumentException).
-     * This test verifies that behavior; if you enable -parameters in build.gradle,
-     * this endpoint may return 200 and this test would need to be updated.
+     * so the fail endpoint now returns 200 OK.
      */
     @Test
-    void failEndpoint_withoutParameterNames_throws() {
-        assertThrows(ServletException.class, () ->
-                mockMvc.perform(get("/demo/fail").param("query", "test")).andReturn());
+    void failEndpoint_withParameterNames_returnsOk() throws Exception {
+        mockMvc.perform(get("/demo/fail").param("query", "test"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("query=test, filter=null"));
     }
 
     @Test
-    void failPathEndpoint_withoutParameterNames_throws() {
-        assertThrows(ServletException.class, () ->
-                mockMvc.perform(get("/demo/fail/42")).andReturn());
+    void failPathEndpoint_withParameterNames_returnsOk() throws Exception {
+        mockMvc.perform(get("/demo/fail/42"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("id=42"));
     }
 }
